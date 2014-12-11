@@ -850,7 +850,8 @@ int bgzf_read_block2(BGZF *fp, int *compressed_block_lengths, int *block_address
     else
 	block_lim = 1;
 
-    if (fp->block_length != 0) fp->block_offset = 0; // Do not reset offset if this read follows a seek.
+    int is_load_after_seek = fp->block_length == 0;
+    if (!is_load_after_seek) fp->block_offset = 0;
 
     for(i = 0; i < block_lim; ++i) {
 	    
@@ -915,6 +916,10 @@ int bgzf_read_block2(BGZF *fp, int *compressed_block_lengths, int *block_address
 
 	if(fp->mt->curr > 0) 
 	{
+	    // Prevent cache retrieval routine from resetting block_offset
+	    // because we have been using fp to load blocks in the meantime
+	    if(is_load_after_seek)
+		fp->block_length = 0;
 	    // Keeping copy in cache, retrieve the first block requested
 	    // ready to read.
 	    assert(load_block_from_cache(fp, block_addresses[0]));
