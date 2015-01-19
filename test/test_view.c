@@ -176,12 +176,12 @@ int main(int argc, char *argv[])
 
     // Process any options; currently cram only.
     for (; in_opts;  in_opts = (last=in_opts)->next, free(last)) {
-        hts_set_opt(in,  in_opts->opt,  in_opts->val);
+	hts_set_opt(in, HTSOL_CRAM, in_opts->opt,  in_opts->val);
         if (in_opts->opt == CRAM_OPT_REFERENCE)
-            hts_set_opt(out,  in_opts->opt,  in_opts->val);
+            hts_set_opt(out, HTSOL_CRAM, in_opts->opt,  in_opts->val);
     }
     for (; out_opts;  out_opts = (last=out_opts)->next, free(last))
-        hts_set_opt(out, out_opts->opt,  out_opts->val);
+        hts_set_opt(out, HTSOL_CRAM, out_opts->opt,  out_opts->val);
 
     sam_hdr_write(out, h);
     if (optind + 1 < argc && !(flag&1)) { // BAM input and has a region

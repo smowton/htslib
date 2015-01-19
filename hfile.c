@@ -295,6 +295,59 @@ void hclose_abruptly(hFILE *fp)
     errno = save;
 }
 
+int hfile_set_option(hFILE *fp, enum hts_fileio_option opt, ...)
+{
+    int r;
+    va_list args;
+
+    va_start(args, opt);
+    r = hfile_set_voption(fp, opt, args);
+    va_end(args);
+
+    return r;
+}
+
+static int recreate_buffer(hFILE *fp, size_t new_size)
+{
+    // Note this needs to work even after some I/O has already happened,
+    // as some headers have already been consumed when determining file type.
+
+    size_t begin_offset = fp->begin - fp->buffer;
+    size_t end_offset = fp->end - fp->buffer;
+
+    char *new_buf = (char*) realloc(fp->buffer, new_size);
+    if(!new_buf)
+	return -1;
+
+    fp->buffer = new_buf;
+    fp->begin = new_buf + begin_offset;
+    fp->end = new_buf + end_offset;
+    fp->limit = &fp->buffer[new_size];
+
+    return 0;
+}
+
+int hfile_set_voption(hFILE *fp, enum hts_fileio_option opt, va_list args)
+{
+    int r;
+
+    if(!fp)
+	return -1;
+
+    switch(opt) {
+    case HTS_FILEIO_BUFFER_SIZE:
+	{
+	    size_t new_size = va_arg(args, size_t);
+	    r = recreate_buffer(fp, new_size);
+	    break;
+	}
+    default:
+	r = -1;
+	break;
+    }
+
+    return r;
+}
 
 /***************************
  * File descriptor backend *

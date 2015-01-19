@@ -137,6 +137,15 @@ enum sam_fields {
     SAM_RGAUX = 0x00001000,
 };
 
+enum hts_option_level {
+    HTSOL_FILEIO,
+    HTSOL_CRAM
+};
+
+enum hts_fileio_option {
+    HTS_FILEIO_BUFFER_SIZE
+};
+
 enum cram_option {
     CRAM_OPT_DECODE_MD,
     CRAM_OPT_PREFIX,
@@ -260,7 +269,7 @@ const htsFormat *hts_get_format(htsFile *fp);
   @param ... Optional arguments, dependent on the option used.
   @return    0 for success, or negative if an error occurred.
 */
-int hts_set_opt(htsFile *fp, enum cram_option opt, ...);
+int hts_set_opt(htsFile *fp, enum hts_option_level, ...);
 
 int hts_getline(htsFile *fp, int delimiter, kstring_t *str);
 char **hts_readlines(const char *fn, int *_n);

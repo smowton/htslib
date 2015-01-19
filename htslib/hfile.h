@@ -28,8 +28,10 @@ DEALINGS IN THE SOFTWARE.  */
 #include <string.h>
 
 #include <sys/types.h>
+#include <stdarg.h>
 
 #include "hts_defs.h"
+#include "hts.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -196,6 +198,18 @@ hwrite(hFILE *fp, const void *buffer, size_t nbytes)
   @return    0 if successful, or EOF if an error occurred.
 */
 int hflush(hFILE *fp) HTS_RESULT_USED;
+
+/*!
+  @abstract  Set stream option
+  @return     0 if successful, -1 otherwise
+*/
+int hfile_set_option(hFILE *fp, enum hts_fileio_option opt, ...);
+
+/*!
+  @abstract  Set stream option
+  @return     0 if successful, -1 otherwise
+*/
+int hfile_set_voption(hFILE *fp, enum hts_fileio_option opt, va_list args);
 
 #ifdef __cplusplus
 }

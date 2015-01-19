@@ -432,17 +432,54 @@ const htsFormat *hts_get_format(htsFile *fp)
     return fp? &fp->format : NULL;
 }
 
-int hts_set_opt(htsFile *fp, enum cram_option opt, ...) {
+int hts_set_opt(htsFile *fp, enum hts_option_level level, ...) {
     int r;
     va_list args;
+    va_start(args, level);
 
-    if (fp->format.format != cram)
-        return 0;
+    switch(level) {
+    case HTSOL_FILEIO:
+	{
+	    enum hts_fileio_option opt = va_arg(args, enum hts_fileio_option);
+	    switch(fp->format.format) {
+	    case binary_format:
+	    case bam:
+	    case bcf:
+		r = hfile_set_voption(fp->fp.bgzf->fp, opt, args);
+		break;
+	    case cram:
+		r = hfile_set_voption(fp->fp.cram->fp, opt, args);
+		break;
+	    case text_format:
+	    case sam:
+	    case vcf:
+		if(fp->is_write && fp->format.compression == no_compression)
+		    r = hfile_set_voption(fp->fp.hfile, opt, args);
+		else
+		    r = -1;
+		break;
+	    default:
+		r = -1;
+		break;
+	    }
+	}
+	break;
+    case HTSOL_CRAM:
+	{
+	    enum cram_option opt = va_arg(args, enum cram_option);
+	    if (fp->format.format != cram)
+		r = 0;
+	    else
+		r = cram_set_voption(fp->fp.cram, opt, args);
+	    break;
+	}
+	break;
+    default:
+	r = -1;
+	break;
+    }
 
-    va_start(args, opt);
-    r = cram_set_voption(fp->fp.cram, opt, args);
     va_end(args);
-
     return r;
 }
 
@@ -451,7 +488,7 @@ int hts_set_threads(htsFile *fp, int n)
     if (fp->format.compression == bgzf) {
         return bgzf_mt(fp->fp.bgzf, n, 256);
     } else if (fp->format.format == cram) {
-        return hts_set_opt(fp, CRAM_OPT_NTHREADS, n);
+        return hts_set_opt(fp, HTSOL_CRAM, CRAM_OPT_NTHREADS, n);
     }
     else return 0;
 }
